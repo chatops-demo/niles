@@ -89,9 +89,6 @@ namespace Microsoft.BotBuilderSamples
                 var topScoringIntent = luisResults?.GetTopScoringIntent();
 
                 var topIntent = topScoringIntent.Value.intent;
-
-               
-
                 // update greeting state with any entities captured
                 //await UpdateGreetingState(luisResults, dc.Context);
 
