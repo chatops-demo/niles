@@ -1,0 +1,15 @@
+C:\Users\damaso.flores.garcia\source\repos\dflo\niles\Bot\bin\Debug\netcoreapp2.1\BotConfiguration.bot
+C:\Users\damaso.flores.garcia\source\repos\dflo\niles\Bot\bin\Debug\netcoreapp2.1\Bot.deps.json
+C:\Users\damaso.flores.garcia\source\repos\dflo\niles\Bot\bin\Debug\netcoreapp2.1\Bot.runtimeconfig.json
+C:\Users\damaso.flores.garcia\source\repos\dflo\niles\Bot\bin\Debug\netcoreapp2.1\Bot.runtimeconfig.dev.json
+C:\Users\damaso.flores.garcia\source\repos\dflo\niles\Bot\bin\Debug\netcoreapp2.1\Bot.dll
+C:\Users\damaso.flores.garcia\source\repos\dflo\niles\Bot\bin\Debug\netcoreapp2.1\Bot.pdb
+C:\Users\damaso.flores.garcia\source\repos\dflo\niles\Bot\obj\Debug\netcoreapp2.1\Bot.csprojAssemblyReference.cache
+C:\Users\damaso.flores.garcia\source\repos\dflo\niles\Bot\obj\Debug\netcoreapp2.1\Bot.csproj.CoreCompileInputs.cache
+C:\Users\damaso.flores.garcia\source\repos\dflo\niles\Bot\obj\Debug\netcoreapp2.1\Bot.RazorAssemblyInfo.cache
+C:\Users\damaso.flores.garcia\source\repos\dflo\niles\Bot\obj\Debug\netcoreapp2.1\Bot.RazorAssemblyInfo.cs
+C:\Users\damaso.flores.garcia\source\repos\dflo\niles\Bot\obj\Debug\netcoreapp2.1\Bot.AssemblyInfoInputs.cache
+C:\Users\damaso.flores.garcia\source\repos\dflo\niles\Bot\obj\Debug\netcoreapp2.1\Bot.AssemblyInfo.cs
+C:\Users\damaso.flores.garcia\source\repos\dflo\niles\Bot\obj\Debug\netcoreapp2.1\Bot.RazorTargetAssemblyInfo.cache
+C:\Users\damaso.flores.garcia\source\repos\dflo\niles\Bot\obj\Debug\netcoreapp2.1\Bot.dll
+C:\Users\damaso.flores.garcia\source\repos\dflo\niles\Bot\obj\Debug\netcoreapp2.1\Bot.pdb
