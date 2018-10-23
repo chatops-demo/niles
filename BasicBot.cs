@@ -90,8 +90,10 @@ namespace Microsoft.BotBuilderSamples
 
                 var topIntent = topScoringIntent.Value.intent;
 
+               
+
                 // update greeting state with any entities captured
-                await UpdateGreetingState(luisResults, dc.Context);
+                //await UpdateGreetingState(luisResults, dc.Context);
 
                 // Handle conversation interrupts first.
                 var interrupted = await IsTurnInterruptedAsync(dc, topIntent);
@@ -102,6 +104,15 @@ namespace Microsoft.BotBuilderSamples
                     await _conversationState.SaveChangesAsync(turnContext);
                     await _userState.SaveChangesAsync(turnContext);
                     return;
+                }
+                switch (topIntent)
+                {
+                    case GreetingIntent:
+                        await dc.Context.SendActivityAsync("Hello, this is Niles, your DevOps ChatBot assistant");
+                        break;
+                    default:
+                        Console.WriteLine("couldn't understand the intent");
+                        break;
                 }
 
                 // Continue the current dialog
