@@ -91,7 +91,7 @@ namespace Microsoft.BotBuilderSamples
                 var topIntent = topScoringIntent.Value.intent;
 
                 // update greeting state with any entities captured
-                await UpdateGreetingState(luisResults, dc.Context);
+                // await UpdateGreetingState(luisResults, dc.Context);
 
                 // Handle conversation interrupts first.
                 var interrupted = await IsTurnInterruptedAsync(dc, topIntent);
@@ -117,7 +117,7 @@ namespace Microsoft.BotBuilderSamples
                             switch (topIntent)
                             {
                                 case GreetingIntent:
-                                    await dc.BeginDialogAsync(nameof(GreetingDialog));
+                                    await dc.Context.SendActivityAsync("Hello, this is Niles, your DevOps ChatBot assistant");
                                     break;
 
                                 case NoneIntent:
