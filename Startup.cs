@@ -139,6 +139,9 @@ namespace Microsoft.BotBuilderSamples
             var jobService = new JobService(jobState);
             services.AddSingleton(sp => jobService);
 
+            var probotService = new ProbotService();
+            services.AddSingleton(sp => probotService);
+
             services.AddSingleton(sp => endpointService);
 
             services.AddBot<BasicBot>(options =>

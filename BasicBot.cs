@@ -53,7 +53,7 @@ namespace Microsoft.BotBuilderSamples
         /// </summary>
         /// <param name="botServices">Bot services.</param>
         /// <param name="accessors">Bot State Accessors.</param>
-        public BasicBot(BotServices services, JobService jobService, NotificationService notificationService, EndpointService endpointService,
+        public BasicBot(BotServices services, JobService jobService, NotificationService notificationService, EndpointService endpointService, ProbotService probotService,
             UserState userState, ConversationState conversationState, ILoggerFactory loggerFactory)
         {
             _services = services ?? throw new ArgumentNullException(nameof(services));
@@ -76,7 +76,7 @@ namespace Microsoft.BotBuilderSamples
 
             Dialogs = new DialogSet(_dialogStateAccessor);
             Dialogs.Add(new GreetingDialog(_greetingStateAccessor, loggerFactory));
-            Dialogs.Add(new CreateIssueDialog(_issueStateAccessor, loggerFactory, jobService));
+            Dialogs.Add(new CreateIssueDialog(_issueStateAccessor, loggerFactory, jobService, probotService));
         }
 
         private DialogSet Dialogs { get; set; }
@@ -256,7 +256,6 @@ namespace Microsoft.BotBuilderSamples
 
                 await dc.Context.SendActivityAsync($"Thanks for the update probot \r\n{message}");
 
-                // TODO: Handle probot notification post to Teams
                 await _notificationService.NotifyChannels(dc.Context, AppId, message);
             }
 

@@ -14,6 +14,7 @@ namespace BasicBot.Dialogs.CreateIssues
         public IStatePropertyAccessor<CreateIssueState> IssueRequestAccessor { get; }
 
         private JobService _jobService;
+        private ProbotService _probotService;
         private const string IssueDialog = "issueDialog";
 
         private struct Prompts
@@ -29,11 +30,12 @@ namespace BasicBot.Dialogs.CreateIssues
         /// <param name="botServices">Connected services used in processing.</param>
         /// <param name="botState">The <see cref="UserState"/> for storing properties at user-scope.</param>
         /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> that enables logging and tracing.</param>
-        public CreateIssueDialog(IStatePropertyAccessor<CreateIssueState> issueRequestAccessor, ILoggerFactory loggerFactory, JobService jobService)
+        public CreateIssueDialog(IStatePropertyAccessor<CreateIssueState> issueRequestAccessor, ILoggerFactory loggerFactory, JobService jobService, ProbotService probotService)
             : base(nameof(CreateIssueDialog))
         {
             IssueRequestAccessor = issueRequestAccessor ?? throw new ArgumentNullException(nameof(issueRequestAccessor));
             _jobService = jobService ?? throw new ArgumentNullException(nameof(jobService));
+            _probotService = probotService ?? throw new ArgumentNullException(nameof(probotService));
 
             // Add control flow dialogs
             var waterfallSteps = new WaterfallStep[]
@@ -193,6 +195,13 @@ namespace BasicBot.Dialogs.CreateIssues
 
             // Post to probot post(conversationId, issueRequestState)
             // TODO:
+            var obj = new IssueDTO()
+            {
+                conversationId = conversationId,
+                issue = issueRequestState.IssueTitle,
+            };
+
+            await _probotService.PostIssue(obj);
 
             // clear issueRequestState for the next call
             await IssueRequestAccessor.SetAsync(stepContext.Context, null);
