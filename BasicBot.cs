@@ -257,7 +257,7 @@ namespace Microsoft.BotBuilderSamples
                 await dc.Context.SendActivityAsync($"Thanks for the update probot \r\n{message}");
 
                 // TODO: Handle probot notification post to Teams
-                await _notificationService.NotifyChannels(dc.Context, AppId);
+                await _notificationService.NotifyChannels(dc.Context, AppId, message);
             }
 
             return false;           // Did not handle the interrupt.
