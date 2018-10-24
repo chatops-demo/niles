@@ -198,6 +198,13 @@ namespace Microsoft.BotBuilderSamples
                 return true;        // Handled the interrupt.
             }
 
+            if (dc.Context.Activity.Text.ToLower().StartsWith("probot") || dc.Context.Activity.From.Id.ToLower().Equals("probot"))
+            {
+                string message = dc.Context.Activity.Text;
+
+                await dc.Context.SendActivityAsync($"Thanks for the update probot \r\n{message}");
+            }
+
             return false;           // Did not handle the interrupt.
         }
 
