@@ -3,6 +3,8 @@
 
 using System;
 using System.Linq;
+using BasicBot.Jobs;
+using BasicBot.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Bot.Builder;
@@ -123,6 +125,12 @@ namespace Microsoft.BotBuilderSamples
 
             var userState = new UserState(dataStore);
             services.AddSingleton(userState);
+
+            var jobState = new JobState(dataStore);
+            services.AddSingleton(sp => jobState);
+
+            var jobService = new JobService(jobState);
+            services.AddSingleton(sp => jobService);
 
             services.AddBot<BasicBot>(options =>
             {

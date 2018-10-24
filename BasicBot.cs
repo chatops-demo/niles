@@ -9,6 +9,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BasicBot.Dialogs.CreateIssues;
+using BasicBot.Jobs;
+using BasicBot.Services;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
@@ -24,6 +27,7 @@ namespace Microsoft.BotBuilderSamples
     {
         // Supported LUIS Intents
         public const string GreetingIntent = "Greeting";
+        public const string CreateIssueIntent = "CreateIssue";
         public const string CancelIntent = "Cancel";
         public const string HelpIntent = "Help";
         public const string NoneIntent = "None";
@@ -35,23 +39,27 @@ namespace Microsoft.BotBuilderSamples
         public static readonly string LuisConfiguration = "BasicBotLuisApplication";
 
         private readonly IStatePropertyAccessor<GreetingState> _greetingStateAccessor;
+        private readonly IStatePropertyAccessor<CreateIssueState> _issueStateAccessor;
         private readonly IStatePropertyAccessor<DialogState> _dialogStateAccessor;
         private readonly UserState _userState;
         private readonly ConversationState _conversationState;
         private readonly BotServices _services;
+        private readonly JobService _jobService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BasicBot"/> class.
         /// </summary>
         /// <param name="botServices">Bot services.</param>
         /// <param name="accessors">Bot State Accessors.</param>
-        public BasicBot(BotServices services, UserState userState, ConversationState conversationState, ILoggerFactory loggerFactory)
+        public BasicBot(BotServices services, JobService jobService, UserState userState, ConversationState conversationState, ILoggerFactory loggerFactory)
         {
             _services = services ?? throw new ArgumentNullException(nameof(services));
+            _jobService = jobService ?? throw new ArgumentNullException(nameof(jobService));
             _userState = userState ?? throw new ArgumentNullException(nameof(userState));
             _conversationState = conversationState ?? throw new ArgumentNullException(nameof(conversationState));
 
             _greetingStateAccessor = _userState.CreateProperty<GreetingState>(nameof(GreetingState));
+            _issueStateAccessor = _userState.CreateProperty<CreateIssueState>(nameof(CreateIssueState));
             _dialogStateAccessor = _conversationState.CreateProperty<DialogState>(nameof(DialogState));
 
             // Verify LUIS configuration.
@@ -62,6 +70,7 @@ namespace Microsoft.BotBuilderSamples
 
             Dialogs = new DialogSet(_dialogStateAccessor);
             Dialogs.Add(new GreetingDialog(_greetingStateAccessor, loggerFactory));
+            Dialogs.Add(new CreateIssueDialog(_issueStateAccessor, loggerFactory, jobService));
         }
 
         private DialogSet Dialogs { get; set; }
@@ -107,6 +116,20 @@ namespace Microsoft.BotBuilderSamples
                     return;
                 }
 
+                // for testing to view list of jobs. TODO: clean up
+                var text = turnContext.Activity.Text.Trim().ToLowerInvariant();
+                switch (text)
+                {
+                    case "show":
+                    case "show jobs":
+                        await _jobService.ListJobs(turnContext);
+
+                        break;
+
+                    default:
+                        break;
+                }
+
                 // Continue the current dialog
                 var dialogResult = await dc.ContinueDialogAsync();
 
@@ -123,11 +146,16 @@ namespace Microsoft.BotBuilderSamples
                                     await dc.Context.SendActivityAsync("Hello, this is Niles, your DevOps ChatBot assistant");
                                     break;
 
+                                case CreateIssueIntent:
+                                    await dc.BeginDialogAsync(nameof(CreateIssueDialog));
+                                    break;
+
                                 case NoneIntent:
                                 default:
                                     // Help or no intent identified, either way, let's provide some help.
                                     // to the user
                                     await dc.Context.SendActivityAsync("I didn't understand what you just said to me.");
+                                    await DisplayHelp(dc.Context);
                                     break;
                             }
 
@@ -164,7 +192,7 @@ namespace Microsoft.BotBuilderSamples
                         // To learn more about Adaptive Cards, see https://aka.ms/msbot-adaptivecards for more details.
                         if (member.Id != activity.Recipient.Id)
                         {
-                            var welcomeCard = CreateAdaptiveCardAttachment();
+                            var welcomeCard = CreateAdaptiveCardAttachment(@".\Dialogs\Welcome\Resources\welcomeCard.json");
                             var response = CreateResponse(activity, welcomeCard);
                             await dc.Context.SendActivityAsync(response).ConfigureAwait(false);
                         }
@@ -200,8 +228,8 @@ namespace Microsoft.BotBuilderSamples
 
             if (topIntent.Equals(HelpIntent))
             {
-                await dc.Context.SendActivityAsync("Let me try to provide some help.");
-                await dc.Context.SendActivityAsync("I understand greetings, being asked for help, or being asked to cancel what I am doing.");
+                await DisplayHelp(dc.Context);
+
                 if (dc.ActiveDialog != null)
                 {
                     await dc.RepromptDialogAsync();
@@ -210,14 +238,33 @@ namespace Microsoft.BotBuilderSamples
                 return true;        // Handled the interrupt.
             }
 
-            if (dc.Context.Activity.Text.ToLower().Contains("probot") || dc.Context.Activity.From.Id.ToLower().Equals("probot"))
+            if (dc.Context.Activity.From.Id.ToLower().Equals("probot"))
             {
                 string message = dc.Context.Activity.Text;
 
+                // TODO: Handle probot notification post to Teams
                 await dc.Context.SendActivityAsync($"Thanks for the update probot \r\n{message}");
             }
 
             return false;           // Did not handle the interrupt.
+        }
+
+        private async Task DisplayHelp(ITurnContext ctx)
+        {
+            var helpCard = CreateAdaptiveCardAttachment(@".\Dialogs\Help\Resources\helpCard.json");
+            var response = CreateResponse(ctx.Activity, helpCard);
+            await ctx.SendActivityAsync(response).ConfigureAwait(false);
+
+            var reply = ctx.Activity.CreateReply();
+            reply.SuggestedActions = new SuggestedActions()
+            {
+                Actions = new List<CardAction>()
+                                {
+                                    new CardAction() { Title = "Create new issue", Type = ActionTypes.ImBack, Value = "Create new issue" },
+                                    new CardAction() { Title = "Has my build completed", Type = ActionTypes.ImBack, Value = "Has my build completed" },
+                                },
+            };
+            await ctx.SendActivityAsync(reply);
         }
 
         // Create an attachment message response.
@@ -229,9 +276,9 @@ namespace Microsoft.BotBuilderSamples
         }
 
         // Load attachment from file.
-        private Attachment CreateAdaptiveCardAttachment()
+        private Attachment CreateAdaptiveCardAttachment(string cardPath)
         {
-            var adaptiveCard = File.ReadAllText(@".\Dialogs\Welcome\Resources\welcomeCard.json");
+            var adaptiveCard = File.ReadAllText(cardPath);
             return new Attachment()
             {
                 ContentType = "application/vnd.microsoft.card.adaptive",
