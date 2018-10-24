@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using BasicBot.Jobs;
+using BasicBot.Notifications;
 using BasicBot.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -126,11 +127,19 @@ namespace Microsoft.BotBuilderSamples
             var userState = new UserState(dataStore);
             services.AddSingleton(userState);
 
+            var channelState = new ChannelState(dataStore);
+            services.AddSingleton(sp => channelState);
+
+            var notificationService = new NotificationService(channelState);
+            services.AddSingleton(sp => notificationService);
+
             var jobState = new JobState(dataStore);
             services.AddSingleton(sp => jobState);
 
             var jobService = new JobService(jobState);
             services.AddSingleton(sp => jobService);
+
+            services.AddSingleton(sp => endpointService);
 
             services.AddBot<BasicBot>(options =>
             {

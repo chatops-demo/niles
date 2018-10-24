@@ -14,6 +14,7 @@ using BasicBot.Jobs;
 using BasicBot.Services;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Configuration;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -45,18 +46,23 @@ namespace Microsoft.BotBuilderSamples
         private readonly ConversationState _conversationState;
         private readonly BotServices _services;
         private readonly JobService _jobService;
+        private readonly NotificationService _notificationService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BasicBot"/> class.
         /// </summary>
         /// <param name="botServices">Bot services.</param>
         /// <param name="accessors">Bot State Accessors.</param>
-        public BasicBot(BotServices services, JobService jobService, UserState userState, ConversationState conversationState, ILoggerFactory loggerFactory)
+        public BasicBot(BotServices services, JobService jobService, NotificationService notificationService, EndpointService endpointService,
+            UserState userState, ConversationState conversationState, ILoggerFactory loggerFactory)
         {
             _services = services ?? throw new ArgumentNullException(nameof(services));
             _jobService = jobService ?? throw new ArgumentNullException(nameof(jobService));
+            _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
             _userState = userState ?? throw new ArgumentNullException(nameof(userState));
             _conversationState = conversationState ?? throw new ArgumentNullException(nameof(conversationState));
+
+            AppId = string.IsNullOrWhiteSpace(endpointService.AppId) ? "1" : endpointService.AppId;
 
             _greetingStateAccessor = _userState.CreateProperty<GreetingState>(nameof(GreetingState));
             _issueStateAccessor = _userState.CreateProperty<CreateIssueState>(nameof(CreateIssueState));
@@ -74,6 +80,8 @@ namespace Microsoft.BotBuilderSamples
         }
 
         private DialogSet Dialogs { get; set; }
+
+        private string AppId { get; }
 
         /// <summary>
         /// Run every turn of the conversation. Handles orchestration of messages.
@@ -196,8 +204,12 @@ namespace Microsoft.BotBuilderSamples
                             var response = CreateResponse(activity, welcomeCard);
                             await dc.Context.SendActivityAsync(response).ConfigureAwait(false);
                         }
-                        else {
+                        else
+                        {
                             await dc.Context.SendActivityAsync($"Thanks for adding Niles. Type anything to get started.");
+
+                            // save conversation channel
+                            await _notificationService.StartChannel(turnContext);
                         }
                     }
                 }
@@ -242,8 +254,10 @@ namespace Microsoft.BotBuilderSamples
             {
                 string message = dc.Context.Activity.Text;
 
-                // TODO: Handle probot notification post to Teams
                 await dc.Context.SendActivityAsync($"Thanks for the update probot \r\n{message}");
+
+                // TODO: Handle probot notification post to Teams
+                await _notificationService.NotifyChannels(dc.Context, AppId);
             }
 
             return false;           // Did not handle the interrupt.
