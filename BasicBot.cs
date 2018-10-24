@@ -81,6 +81,9 @@ namespace Microsoft.BotBuilderSamples
 
             if (activity.Type == ActivityTypes.Message)
             {
+                // Remove the bot mention to avoid issues with LUIS's NLP
+                dc.Context.Activity.RemoveRecipientMention();
+
                 // Perform a call to LUIS to retrieve results for the current activity message.
                 var luisResults = await _services.LuisServices[LuisConfiguration].RecognizeAsync(dc.Context, cancellationToken).ConfigureAwait(false);
 
@@ -146,11 +149,17 @@ namespace Microsoft.BotBuilderSamples
             }
             else if (activity.Type == ActivityTypes.ConversationUpdate)
             {
+                // Debugging purposes. Remove Later
+                await dc.Context.SendActivityAsync("Conversation Update occured");
+
                 if (activity.MembersAdded.Any())
                 {
                     // Iterate over all new members added to the conversation.
                     foreach (var member in activity.MembersAdded)
                     {
+                        // Debugging purposes. Remove Later
+                        await dc.Context.SendActivityAsync($"Member joined {member.Name} with id: {member.Id}");
+
                         // Greet anyone that was not the target (recipient) of this message.
                         // To learn more about Adaptive Cards, see https://aka.ms/msbot-adaptivecards for more details.
                         if (member.Id != activity.Recipient.Id)
@@ -158,6 +167,9 @@ namespace Microsoft.BotBuilderSamples
                             var welcomeCard = CreateAdaptiveCardAttachment();
                             var response = CreateResponse(activity, welcomeCard);
                             await dc.Context.SendActivityAsync(response).ConfigureAwait(false);
+                        }
+                        else {
+                            await dc.Context.SendActivityAsync($"Thanks for adding Niles. Type anything to get started.");
                         }
                     }
                 }
@@ -198,7 +210,7 @@ namespace Microsoft.BotBuilderSamples
                 return true;        // Handled the interrupt.
             }
 
-            if (dc.Context.Activity.Text.ToLower().StartsWith("probot") || dc.Context.Activity.From.Id.ToLower().Equals("probot"))
+            if (dc.Context.Activity.Text.ToLower().Contains("probot") || dc.Context.Activity.From.Id.ToLower().Equals("probot"))
             {
                 string message = dc.Context.Activity.Text;
 
