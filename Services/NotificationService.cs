@@ -38,7 +38,7 @@ namespace BasicBot.Services
             }
         }
 
-        public async Task NotifyChannels(ITurnContext turnContext, string appId)
+        public async Task NotifyChannels(ITurnContext turnContext, string appId, string message)
         {
             // Get the channel log.
             ChannelLog channelLog = await GetChannelLog(turnContext);
@@ -47,7 +47,7 @@ namespace BasicBot.Services
 
             foreach (var channel in channels)
             {
-                await CompleteNotificationAsync(turnContext.Adapter, appId, channel);
+                await CompleteNotificationAsync(turnContext.Adapter, appId, channel, message);
             }
         }
 
@@ -97,12 +97,13 @@ namespace BasicBot.Services
             BotAdapter adapter,
             string botId,
             ChannelLog.ChannelData channelInfo,
+            string message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            await adapter.ContinueConversationAsync(botId, channelInfo.Conversation, CreateCallback(channelInfo), cancellationToken);
+            await adapter.ContinueConversationAsync(botId, channelInfo.Conversation, CreateCallback(channelInfo, message), cancellationToken);
         }
 
-        private BotCallbackHandler CreateCallback(ChannelLog.ChannelData channelInfo)
+        private BotCallbackHandler CreateCallback(ChannelLog.ChannelData channelInfo, string message)
         {
             return async (turnContext, token) =>
             {
@@ -119,7 +120,7 @@ namespace BasicBot.Services
                 //await _channelState.SaveChangesAsync(turnContext);
 
                 // Send the user a proactive confirmation message.
-                await turnContext.SendActivityAsync($"Notification {channelInfo.TimeStamp} is complete.");
+                await turnContext.SendActivityAsync($"Notification:\r\nNew Issue has been created: {message}");
             };
         }
     }
